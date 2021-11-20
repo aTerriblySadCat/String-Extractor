@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 
 Console.WriteLine("Enter the name of the file from where to extract: ");
 string filePath = Console.ReadLine();
@@ -24,16 +25,16 @@ else
 }
 
 Dictionary<long, string> results = new Dictionary<long, string>();
-using (StreamReader sr = new StreamReader(filePath))
+using (Stream s = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 {
 	long totalBytesRead = 0;
-	char[] readBlock = new char[bufferSize];
+	byte[] readBlock = new byte[bufferSize];
 	while(true)
 	{
-		long readBytes = sr.ReadBlock(readBlock, 0, readBlock.Length);
+		long readBytes = s.Read(readBlock, 0, readBlock.Length);
 		if(readBytes > 0)
 		{
-			string readStr = new string(readBlock);
+			string readStr = Encoding.Default.GetString(readBlock);
 			MatchCollection matches = regex.Matches(readStr);
 			foreach(Match match in matches)
 			{
@@ -44,8 +45,9 @@ using (StreamReader sr = new StreamReader(filePath))
 					Console.WriteLine(match.Value + " found at index " + (match.Index + totalBytesRead));
 				}
 			}
+
+			totalBytesRead += readBytes;
 		}
-		totalBytesRead += readBytes;
 
 		if (bufferSize > readBytes)
 		{
